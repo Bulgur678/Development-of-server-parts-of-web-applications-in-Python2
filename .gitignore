@@ -1,0 +1,13 @@
+.git
+__pycache__/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+*.pyc
+output/
+Сборники индивидуальных вариантов практического задания №2. ИКБО-70-24.pdf
+.flake8
+*.svg
+pyproject.toml
