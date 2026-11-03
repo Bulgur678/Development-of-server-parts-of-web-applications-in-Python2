@@ -11,3 +11,4 @@ output/
 .flake8
 *.svg
 pyproject.toml
+cleancode.bat

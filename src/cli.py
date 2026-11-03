@@ -1,12 +1,40 @@
 import barcode
-from barcode.writer import SVGWriter
+import argparse
 
-# 1. Получаем класс штрих-кода Code128
-code128_class = barcode.get_barcode_class("code128")
 
-# 2. Создаем объект штрих-кода с нужными данными (например, строка "12345678")
-# SVGWriter отвечает за отрисовку в формат SVG
-barcode_obj = code128_class("12345678", writer=SVGWriter())
+def generate_barcodes(input_file: str) -> None:
+    """Читает txt файлы и генеринует SVG штрих коды в кодировке Code128"""
+    try:
+        code128 = barcode.get_barcode_class("code128")
+        with open(input_file, "r", encoding= "utf-8") as f:
+            lines = f.readlines()
+        for line_num, text in enumerate(lines, start=1):
+            text = text.strip() 
+            if not text:
+                continue
 
-# 3. Сохраняем в файл (метод save создаст файл 'barcode.svg')
-barcode_obj.save("barcode")
+            barcode_obj = code128(text)
+            filename = f"barcode_{line_num}"
+            barcode_obj.save(filename, text=text)
+            print(f"Сгенерирован: {filename}.svg для текста: '{text}'")
+
+    except FileNotFoundError:
+        print(f"File {input_file} does not exist")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="")
+
+    parser.add_argument(
+        "--input",
+        "-i",
+        default="input.txt",
+        help="Путь к файлу с входными данными",
+    )
+
+    args = parser.parse_args()
+    generate_barcodes(args.input)
+
+
+if __name__ == "__main__":
+    main()
