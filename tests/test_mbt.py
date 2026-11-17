@@ -12,12 +12,15 @@ from src.app import app, CONFIG
 from src.client import APIClient
 from src.data_layer import clear_database
 
+from src.data_layer import clear_database, configure_database
+
 
 class APIStateMachine(RuleBasedStateMachine):
     """Стейт-машина для фаззинг-тестирования HTTP API по модели."""
 
     def __init__(self):
         CONFIG["test_mode"] = True
+        configure_database("sqlite:///test_mbt.db")
         clear_database()
         self.created_users = set()
         self.created_messages = set()
@@ -36,7 +39,7 @@ class APIStateMachine(RuleBasedStateMachine):
             client=test_client,
         )
 
-    @rule(key=st.integers(min_value=1, max_value=100))
+    @rule(key=st.integers(min_value=1, max_value=5))
     def submit_user(self, key: int):
         """Тест создания пользователя: PUT /core/api/submit-user/:key."""
         res = self.api_client.create_user(key)
@@ -125,10 +128,17 @@ class APIStateMachine(RuleBasedStateMachine):
     @rule()
     def test_old_message_in_report(self):
         """Покрывает ветку отсечения сообщений старше 7 минут в join()."""
-        from src.data_layer import messages, now
+        from sqlalchemy import update
+        from sqlalchemy.orm import Session
+        from src import data_layer
 
-        if messages:
-            messages[0]["datetime"] = now() - 600
+        old_offset_seconds = 600
+        with Session(data_layer.engine) as session:
+            stmt = update(data_layer.Message).values(
+                datetime=data_layer.now() - old_offset_seconds
+            )
+            session.execute(stmt)
+            session.commit()
         report = self.api_client.join()
         assert isinstance(report, list)
 

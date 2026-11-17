@@ -12,3 +12,6 @@ output/
 *.svg
 pyproject.toml
 cleancode.bat
+*.db
+*.sqlite
+*.sqlite3
