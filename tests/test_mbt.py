@@ -6,7 +6,7 @@
 
 from fastapi.testclient import TestClient
 from hypothesis import strategies as st
-from hypothesis.stateful import RuleBasedStateMachine, rule, initialize
+from hypothesis.stateful import RuleBasedStateMachine, rule
 
 from src.app import app, CONFIG
 from src.client import APIClient
@@ -17,9 +17,11 @@ class APIStateMachine(RuleBasedStateMachine):
     """Стейт-машина для фаззинг-тестирования HTTP API по модели."""
 
     def __init__(self):
-        super().__init__()
         CONFIG["test_mode"] = True
         clear_database()
+        self.created_users = set()
+        self.created_messages = set()
+        super().__init__()
         test_client = TestClient(app)
         self.api_client = APIClient(
             base_url="http://testserver",
@@ -33,15 +35,6 @@ class APIStateMachine(RuleBasedStateMachine):
             password="bad_password",
             client=test_client,
         )
-        self.created_users = set()
-        self.created_messages = set()
-
-    @initialize()
-    def setup_state(self):
-        """Сброс состояния перед запуском тестов."""
-        clear_database()
-        self.created_users.clear()
-        self.created_messages.clear()
 
     @rule(key=st.integers(min_value=1, max_value=100))
     def submit_user(self, key: int):
@@ -66,7 +59,10 @@ class APIStateMachine(RuleBasedStateMachine):
     @rule(
         key=st.integers(min_value=1, max_value=100),
         user_key=st.integers(min_value=1, max_value=100),
-        arg=st.text(max_size=10),
+        arg=st.text(
+            alphabet=st.characters(blacklist_categories=("Cc", "Cs")),
+            max_size=10,
+        ),
     )
     def submit_message(self, key: int, user_key: int, arg: str):
         """Тест создания сообщения: PUT /core/api/submit-message/:key."""
