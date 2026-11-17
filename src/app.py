@@ -74,7 +74,6 @@ def browse_user(user: str = Depends(authenticate)):
     return to_xml_response(rows, root_tag="users")
 
 
-
 @app.put("/core/api/submit-message/{key}")
 def submit_message(
     key: int,
@@ -149,7 +148,6 @@ def browse_message(user: int, auth_user: str = Depends(authenticate)):
     return to_xml_response(rows, root_tag="messages")
 
 
-
 @app.get("/core/api/browse-result/{message}")
 def browse_result(message: int, auth_user: str = Depends(authenticate)):
     """GET /core/api/browse-result/:message - результат сообщения."""
@@ -189,7 +187,6 @@ def main() -> None:
     CONFIG["username"] = args.username
     CONFIG["password"] = args.password
     CONFIG["test_mode"] = args.test
-
 
     uvicorn.run(app, host="127.0.0.1", port=args.port)
 

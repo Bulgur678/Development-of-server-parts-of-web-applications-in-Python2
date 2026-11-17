@@ -28,9 +28,7 @@ class APIClient:
     ) -> dict | list:
         """Отправляет HTTP-запрос и парсит XML-ответ в Python dict/list."""
         url = f"{self.base_url}{path}"
-        resp = self._client.request(
-            method, url, params=params, auth=self.auth
-        )
+        resp = self._client.request(method, url, params=params, auth=self.auth)
 
         if resp.status_code == 401:
             raise PermissionError("401 Unauthorized")

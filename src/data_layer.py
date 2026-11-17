@@ -217,7 +217,9 @@ def get_result_by_message(message_key: int) -> dict:
         stmt = select(Result).where(Result.message == msg_int)
         row = session.scalars(stmt).first()
         if row is None:
-            raise ValueError(f"Нет результата для сообщения с key={message_key}")
+            raise ValueError(
+                f"Нет результата для сообщения с key={message_key}"
+            )
         return row.to_dict()
 
 

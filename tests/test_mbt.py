@@ -10,7 +10,6 @@ from hypothesis.stateful import RuleBasedStateMachine, rule
 
 from src.app import app, CONFIG
 from src.client import APIClient
-from src.data_layer import clear_database
 
 from src.data_layer import clear_database, configure_database
 
@@ -121,8 +120,8 @@ class APIStateMachine(RuleBasedStateMachine):
 
     @rule(key=st.integers(min_value=1, max_value=100))
     def submit_message_missing_user(self, key: int):
-        """Покрывает ветку ValueError при создании сообщения для несуществующего user."""
-        res = self.api_client.create_message(user=99999, arg="test", key=key)
+        """Gри создании сообщения для несуществующего user."""
+        res = self.api_client.create_message(user=99, arg="t", key=key)
         assert "error" in res
 
     @rule()
@@ -141,7 +140,6 @@ class APIStateMachine(RuleBasedStateMachine):
             session.commit()
         report = self.api_client.join()
         assert isinstance(report, list)
-
 
 
 TestAPIStateMachine = APIStateMachine.TestCase
