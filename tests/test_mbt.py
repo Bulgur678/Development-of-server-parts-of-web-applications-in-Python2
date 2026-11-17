@@ -84,9 +84,10 @@ class APIStateMachine(RuleBasedStateMachine):
     @rule(key=st.integers(min_value=1, max_value=100))
     def discard_message(self, key: int):
         """Тест удаления сообщения: GET /core/api/discard-message."""
-        res = self.api_client.delete_message(key)
+        target_key = next(iter(self.created_messages), key)
+        res = self.api_client.delete_message(target_key)
         assert isinstance(res, dict)
-        self.created_messages.discard(key)
+        self.created_messages.discard(target_key)
 
     @rule(user_key=st.integers(min_value=1, max_value=100))
     def browse_message(self, user_key: int):
@@ -114,6 +115,23 @@ class APIStateMachine(RuleBasedStateMachine):
             assert False, "Should have raised PermissionError"
         except PermissionError:
             pass
+
+    @rule(key=st.integers(min_value=1, max_value=100))
+    def submit_message_missing_user(self, key: int):
+        """Покрывает ветку ValueError при создании сообщения для несуществующего user."""
+        res = self.api_client.create_message(user=99999, arg="test", key=key)
+        assert "error" in res
+
+    @rule()
+    def test_old_message_in_report(self):
+        """Покрывает ветку отсечения сообщений старше 7 минут в join()."""
+        from src.data_layer import messages, now
+
+        if messages:
+            messages[0]["datetime"] = now() - 600
+        report = self.api_client.join()
+        assert isinstance(report, list)
+
 
 
 TestAPIStateMachine = APIStateMachine.TestCase

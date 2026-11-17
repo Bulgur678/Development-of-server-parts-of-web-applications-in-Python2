@@ -34,20 +34,13 @@ def get_row(table: list[dict], key, name: str) -> dict:
     raise ValueError(f"В таблице '{name}' нет записи с key={key}")
 
 
-def create_user(key=None) -> dict:
+def create_user(key: int) -> dict:
     """Создает новую запись в таблице user."""
-    if key is not None:
-        user_key = int(key)
-        for user in users:
-            if user["key"] == user_key:
-                return user
-    else:
-        user_key = get_next_key(users)
-
-    user = {
-        "key": user_key,
-        "datetime": now(),
-    }
+    user_key = int(key)
+    for user in users:
+        if user["key"] == user_key:
+            return user
+    user = {"key": user_key, "datetime": now()}
     users.append(user)
     return user
 
@@ -65,18 +58,14 @@ def get_all_users() -> list[dict]:
 
 
 def create_message(
-    user, arg="", description="", tags="", stage="", key=None
+    user, key, arg="", description="", tags="", stage=""
 ) -> dict:
     """Создает запись в таблице message для пользователя."""
     owner = get_row(users, user, "user")
-    if key is not None:
-        msg_key = int(key)
-        for msg in messages:
-            if msg["key"] == msg_key:
-                return msg
-    else:
-        msg_key = get_next_key(messages)
-
+    msg_key = int(key)
+    for msg in messages:
+        if msg["key"] == msg_key:
+            return msg
     message = {
         "key": msg_key,
         "datetime": now(),
@@ -95,11 +84,6 @@ def delete_message(key) -> dict:
     row = get_row(messages, key, "message")
     messages.remove(row)
     return row
-
-
-def get_all_messages() -> list[dict]:
-    """Возвращает все записи таблицы message."""
-    return messages
 
 
 def get_messages_by_user(user_key) -> list[dict]:
@@ -121,18 +105,6 @@ def create_result(message, result="", stage="", error="") -> dict:
     }
     results.append(row)
     return row
-
-
-def delete_result(key) -> dict:
-    """Удаляет запись из таблицы result по ключу."""
-    row = get_row(results, key, "result")
-    results.remove(row)
-    return row
-
-
-def get_all_results() -> list[dict]:
-    """Возвращает все записи таблицы result."""
-    return results
 
 
 def get_result_by_message(message_key) -> dict:

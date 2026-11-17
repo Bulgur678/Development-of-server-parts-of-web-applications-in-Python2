@@ -1,5 +1,6 @@
 import barcode
 import argparse
+import sys
 
 
 def generate_barcodes(input_file: str) -> None:
@@ -20,6 +21,7 @@ def generate_barcodes(input_file: str) -> None:
 
     except FileNotFoundError:
         print(f"File {input_file} does not exist")
+        sys.exit(1)
 
 
 def main():

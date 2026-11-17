@@ -7,6 +7,7 @@
 import argparse
 import sys
 import subprocess
+import uvicorn
 from fastapi import FastAPI, Depends, HTTPException, status, Response
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from dict2xml import dict2xml
@@ -16,7 +17,7 @@ from src import data_layer
 app = FastAPI(title="Barcode Code128 HTTP API")
 security = HTTPBasic()
 
-# Глобальные настройки авторизации и режима тестирования
+
 CONFIG = {
     "username": "admin",
     "password": "secret",
@@ -43,16 +44,10 @@ def to_xml_response(data, root_tag: str = "response") -> Response:
     """Преобразует данные Python в XML-ответ с нужным заголовком."""
     if isinstance(data, list):
         payload = {"item": data}
-    elif isinstance(data, dict):
-        payload = data
     else:
-        payload = {"value": str(data)}
-
+        payload = data
     xml_content = f"<{root_tag}>\n{dict2xml(payload)}\n</{root_tag}>"
     return Response(content=xml_content, media_type="application/xml")
-
-
-# --- 1. Таблица User ---
 
 
 @app.put("/core/api/submit-user/{key}")
@@ -78,8 +73,6 @@ def browse_user(user: str = Depends(authenticate)):
     rows = data_layer.get_all_users()
     return to_xml_response(rows, root_tag="users")
 
-
-# --- 2. Таблица Message ---
 
 
 @app.put("/core/api/submit-message/{key}")
@@ -156,8 +149,6 @@ def browse_message(user: int, auth_user: str = Depends(authenticate)):
     return to_xml_response(rows, root_tag="messages")
 
 
-# --- 3. Таблица Result ---
-
 
 @app.get("/core/api/browse-result/{message}")
 def browse_result(message: int, auth_user: str = Depends(authenticate)):
@@ -167,9 +158,6 @@ def browse_result(message: int, auth_user: str = Depends(authenticate)):
         return to_xml_response(row, root_tag="result")
     except ValueError as err:
         return to_xml_response({"error": str(err)}, root_tag="error")
-
-
-# --- 4. Таблица Report ---
 
 
 @app.get("/core/api/browse-report")
@@ -202,7 +190,6 @@ def main() -> None:
     CONFIG["password"] = args.password
     CONFIG["test_mode"] = args.test
 
-    import uvicorn
 
     uvicorn.run(app, host="127.0.0.1", port=args.port)
 

@@ -19,20 +19,18 @@ class APIClient:
     ):
         self.base_url = base_url.rstrip("/")
         self.auth = (username, password)
-        self._client = client
+        self._client = client or httpx.Client(
+            base_url=self.base_url, auth=self.auth
+        )
 
     def _request(
         self, method: str, path: str, params: dict | None = None
     ) -> dict | list:
         """Отправляет HTTP-запрос и парсит XML-ответ в Python dict/list."""
         url = f"{self.base_url}{path}"
-        if self._client:
-            resp = self._client.request(
-                method, url, params=params, auth=self.auth
-            )
-        else:
-            with httpx.Client(auth=self.auth) as client:
-                resp = client.request(method, url, params=params)
+        resp = self._client.request(
+            method, url, params=params, auth=self.auth
+        )
 
         if resp.status_code == 401:
             raise PermissionError("401 Unauthorized")
@@ -61,7 +59,7 @@ class APIClient:
         """Приводит строковые значения XML к int при возможности."""
         if val is None:
             return ""
-        if val.isdigit():
+        if val.isascii() and val.isdigit():
             return int(val)
         return val
 
@@ -78,9 +76,7 @@ class APIClient:
     def get_all_users(self) -> list[dict]:
         """Получить список всех пользователей."""
         res = self._request("GET", "/core/api/browse-user")
-        if isinstance(res, list):
-            return res
-        return [res] if res else []
+        return res if isinstance(res, list) else []
 
     def create_message(
         self,
@@ -112,9 +108,7 @@ class APIClient:
     def get_messages_by_user(self, user: int) -> list[dict]:
         """Получить сообщения конкретного пользователя."""
         res = self._request("GET", f"/core/api/browse-message/{user}")
-        if isinstance(res, list):
-            return res
-        return [res] if res else []
+        return res if isinstance(res, list) else []
 
     def get_result_by_message(self, message: int) -> dict:
         """Получить результат обработки для сообщения."""
@@ -124,6 +118,4 @@ class APIClient:
     def join(self) -> list[dict]:
         """Получить итоговый отчет по формуле (13)."""
         res = self._request("GET", "/core/api/browse-report")
-        if isinstance(res, list):
-            return res
-        return [res] if res else []
+        return res if isinstance(res, list) else []
