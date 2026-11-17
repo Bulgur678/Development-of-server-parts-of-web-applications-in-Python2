@@ -3,8 +3,10 @@
 Имена методов совпадают с методами слоя данных (data_layer.py).
 """
 
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as element_tree
 import httpx
+
+HTTP_UNAUTHORIZED = 401
 
 
 class APIClient:
@@ -30,14 +32,14 @@ class APIClient:
         url = f"{self.base_url}{path}"
         resp = self._client.request(method, url, params=params, auth=self.auth)
 
-        if resp.status_code == 401:
+        if resp.status_code == HTTP_UNAUTHORIZED:
             raise PermissionError("401 Unauthorized")
 
         return self._parse_xml(resp.text)
 
     def _parse_xml(self, xml_text: str) -> dict | list:
         """Простой парсер XML-ответа сервера."""
-        root = ET.fromstring(xml_text)
+        root = element_tree.fromstring(xml_text)
         items = root.findall("item")
         if items:
             result_list = []

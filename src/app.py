@@ -74,6 +74,18 @@ def browse_user(user: str = Depends(authenticate)):
     return to_xml_response(rows, root_tag="users")
 
 
+def run_barcode_task(arg: str) -> tuple[str, str]:
+    """Выполняет генерацию штрих-кода через CLI-утилиту."""
+    if CONFIG["test_mode"]:
+        return "test_completed", ""
+
+    cmd = [sys.executable, "src/bar.py", "--input", arg]
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    if proc.returncode == 0:
+        return "completed", ""
+    return "failed", proc.stderr.strip()
+
+
 @app.put("/core/api/submit-message/{key}")
 def submit_message(
     key: int,
@@ -84,7 +96,7 @@ def submit_message(
     stage: str = "",
     auth_user: str = Depends(authenticate),
 ):
-    """PUT /core/api/submit-message/:key - создание сообщения и запуск CLI."""
+    """PUT /core/api/submit-message/:key"""
     try:
         msg = data_layer.create_message(
             user=user,
@@ -94,32 +106,7 @@ def submit_message(
             stage=stage,
             key=key,
         )
-
-        # Выполнение задачи через subprocess
-        if CONFIG["test_mode"]:
-            res_text = "test_completed"
-            err_text = ""
-        else:
-            try:
-                cmd = [
-                    sys.executable,
-                    "src/bar.py",
-                    "--input",
-                    arg,
-                    "--output",
-                    "output",
-                ]
-                proc = subprocess.run(cmd, capture_output=True, text=True)
-                if proc.returncode == 0:
-                    res_text = "completed"
-                    err_text = ""
-                else:
-                    res_text = "failed"
-                    err_text = proc.stderr.strip()
-            except Exception as ex:
-                res_text = "failed"
-                err_text = str(ex)
-
+        res_text, err_text = run_barcode_task(arg)
         data_layer.create_result(
             message=msg["key"],
             result=res_text,

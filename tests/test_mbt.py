@@ -121,7 +121,7 @@ class APIStateMachine(RuleBasedStateMachine):
     @rule(key=st.integers(min_value=1, max_value=100))
     def submit_message_missing_user(self, key: int):
         """Gри создании сообщения для несуществующего user."""
-        res = self.api_client.create_message(user=99, arg="t", key=key)
+        res = self.api_client.create_message(user=99999, arg="t", key=key)
         assert "error" in res
 
     @rule()
