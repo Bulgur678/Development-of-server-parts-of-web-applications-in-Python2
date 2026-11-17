@@ -6,10 +6,10 @@ def generate_barcodes(input_file: str) -> None:
     """Читает txt файлы и генеринует SVG штрих коды в кодировке Code128"""
     try:
         code128 = barcode.get_barcode_class("code128")
-        with open(input_file, "r", encoding= "utf-8") as f:
+        with open(input_file, "r", encoding="utf-8") as f:
             lines = f.readlines()
         for line_num, text in enumerate(lines, start=1):
-            text = text.strip() 
+            text = text.strip()
             if not text:
                 continue
 
@@ -23,7 +23,9 @@ def generate_barcodes(input_file: str) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="")
+    parser = argparse.ArgumentParser(
+        description="Генератор штрих-кодов Code128 в формате SVG"
+    )
 
     parser.add_argument(
         "--input",
